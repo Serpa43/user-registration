@@ -2,72 +2,70 @@ using Application.DTOs;
 using Application.Interfaces;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
-namespace Presentation.Controllers
+namespace Presentation.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class UsuarioController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UsuarioController : ControllerBase
+    private readonly IUsuarioService _usuarioService;
+
+    public UsuarioController(IUsuarioService usuarioService)
     {
-        private readonly IUsuarioService _usuarioService;
+        _usuarioService = usuarioService;
+    }
 
-        public UsuarioController(IUsuarioService usuarioService)
+    [HttpPost]
+    public async Task<IActionResult> InserirUsuario([FromBody] UsuarioDto usuarioDto)
+    {
+        try
         {
-            _usuarioService = usuarioService;
+            var usuarioCriado = await _usuarioService.AdicionarUsuarioAsync(usuarioDto);
+            return CreatedAtAction(nameof(ObterUsuarioPorCpf), new { cpf = usuarioCriado.Cpf }, usuarioCriado);
         }
-
-        [HttpPost]
-        public async Task<IActionResult> InserirUsuario([FromBody] UsuarioDto usuarioDto)
+        catch (DomainException ex)
         {
-            try
-            {
-                var usuarioCriado = await _usuarioService.AdicionarUsuarioAsync(usuarioDto);
-                return CreatedAtAction(nameof(ObterUsuarioPorCpf), new { cpf = usuarioCriado.Cpf }, usuarioCriado);
-            }
-            catch (DomainException ex)
-            {
-                return BadRequest(new { erro = ex.Message });
-            }
+            return BadRequest(new { erro = ex.Message });
         }
+    }
 
-        [HttpGet]
-        public async Task<IActionResult> ObterUsuarios()
+    [HttpGet]
+    public async Task<IActionResult> ObterUsuarios()
+    {
+        var usuarios = await _usuarioService.ObterTodosUsuariosAsync();
+        return Ok(usuarios);
+    }
+
+    [HttpGet("{cpf}")]
+    public async Task<IActionResult> ObterUsuarioPorCpf([FromRoute] string cpf)
+    {
+        try
         {
-            var usuarios = await _usuarioService.ObterTodosUsuariosAsync();
-            return Ok(usuarios);
+            var usuario = await _usuarioService.ObterUsuarioPorCpfAsync(cpf);
+            return Ok(usuario);
         }
-
-        [HttpGet("{cpf}")]
-        public async Task<IActionResult> ObterUsuarioPorCpf([FromRoute] string cpf)
+        catch (UsuarioNaoEncontradoException)
         {
-            try
-            {
-                var usuario = await _usuarioService.ObterUsuarioPorCpfAsync(cpf);
-                return Ok(usuario);
-            }
-            catch (UsuarioNaoEncontradoException)
-            {
-                return NotFound();
-            }
+            return NotFound();
         }
+    }
 
-        [HttpPut("{cpf}")]
-        public async Task<IActionResult> AtualizarUsuario([FromRoute] string cpf, [FromBody] UsuarioDto usuarioDto)
+    [HttpPut("{cpf}")]
+    public async Task<IActionResult> AtualizarUsuario([FromRoute] string cpf, [FromBody] UsuarioDto usuarioDto)
+    {
+        try
         {
-            try
-            {
-                await _usuarioService.AtualizarUsuarioPorCpfAsync(cpf, usuarioDto);
-                return NoContent();
-            }
-            catch (UsuarioNaoEncontradoException)
-            {
-                return NotFound();
-            }
-            catch (DomainException ex)
-            {
-                return BadRequest(new { erro = ex.Message });
-            }
+            await _usuarioService.AtualizarUsuarioPorCpfAsync(cpf, usuarioDto);
+            return NoContent();
+        }
+        catch (UsuarioNaoEncontradoException)
+        {
+            return NotFound();
+        }
+        catch (DomainException ex)
+        {
+            return BadRequest(new { erro = ex.Message });
         }
     }
 }

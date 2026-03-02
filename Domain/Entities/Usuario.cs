@@ -1,56 +1,54 @@
-using System;
 using Domain.Exceptions;
 using Domain.ValueObjects;
 
-namespace Domain.Entities
+namespace Domain.Entities;
+
+public class Usuario
 {
-    public class Usuario
+    public Guid Id { get; private set; }
+    public string Nome { get; private set; } = null!;
+    public string Cpf { get; private set; } = null!;
+    public string Rg { get; private set; } = null!;
+    public DateTime DataNascimento { get; private set; }
+    public string NumeroTelefone { get; private set; } = null!;
+
+    private Usuario() { }
+
+    public static Usuario Criar(string nome, string cpf, string rg, DateTime dataNascimento, string numeroTelefone)
     {
-        public Guid Id { get; private set; }
-        public string Nome { get; private set; }
-        public string Cpf { get; private set; }
-        public string Rg { get; private set; }
-        public DateTime DataNascimento { get; private set; }
-        public string NumeroTelefone { get; private set; }
+        Validar(nome, rg, numeroTelefone);
+        var cpfValido = new Cpf(cpf);
 
-        private Usuario() { }
-
-        public static Usuario Criar(string nome, string cpf, string rg, DateTime dataNascimento, string numeroTelefone)
+        return new Usuario
         {
-            Validar(nome, rg, numeroTelefone);
-            var cpfValido = new Cpf(cpf);
+            Id = Guid.NewGuid(),
+            Nome = nome.Trim(),
+            Cpf = cpfValido.Valor,
+            Rg = rg.Trim(),
+            DataNascimento = dataNascimento,
+            NumeroTelefone = numeroTelefone.Trim()
+        };
+    }
 
-            return new Usuario
-            {
-                Id = Guid.NewGuid(),
-                Nome = nome.Trim(),
-                Cpf = cpfValido.Valor,
-                Rg = rg.Trim(),
-                DataNascimento = dataNascimento,
-                NumeroTelefone = numeroTelefone.Trim()
-            };
-        }
+    public void Atualizar(string nome, DateTime dataNascimento, string numeroTelefone)
+    {
+        if (string.IsNullOrWhiteSpace(nome))
+            throw new DomainException("Nome é obrigatório.");
 
-        public void Atualizar(string nome, DateTime dataNascimento, string numeroTelefone)
-        {
-            if (string.IsNullOrWhiteSpace(nome))
-                throw new DomainException("Nome é obrigatório.");
+        Nome = nome.Trim();
+        DataNascimento = dataNascimento;
+        NumeroTelefone = numeroTelefone?.Trim() ?? string.Empty;
+    }
 
-            Nome = nome.Trim();
-            DataNascimento = dataNascimento;
-            NumeroTelefone = numeroTelefone?.Trim();
-        }
+    private static void Validar(string nome, string rg, string numeroTelefone)
+    {
+        if (string.IsNullOrWhiteSpace(nome))
+            throw new DomainException("Nome é obrigatório.");
 
-        private static void Validar(string nome, string rg, string numeroTelefone)
-        {
-            if (string.IsNullOrWhiteSpace(nome))
-                throw new DomainException("Nome é obrigatório.");
+        if (string.IsNullOrWhiteSpace(rg))
+            throw new DomainException("RG é obrigatório.");
 
-            if (string.IsNullOrWhiteSpace(rg))
-                throw new DomainException("RG é obrigatório.");
-
-            if (string.IsNullOrWhiteSpace(numeroTelefone))
-                throw new DomainException("Número de telefone é obrigatório.");
-        }
+        if (string.IsNullOrWhiteSpace(numeroTelefone))
+            throw new DomainException("Número de telefone é obrigatório.");
     }
 }
