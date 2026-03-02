@@ -67,6 +67,6 @@ A camada de **Infrastructure** implementa as interfaces (ports) definidas no **D
 
 ## Tecnologias
 
-- .NET Core 3.1
-- Entity Framework Core 5.0 (SQLite)
-- Swagger (Swashbuckle)
+- .NET Core 10.0
+- Entity Framework Core 10.0
+- Swagger (Swashbuckle) 7.3.1
