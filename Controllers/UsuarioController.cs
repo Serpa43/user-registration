@@ -1,16 +1,17 @@
 using Application.DTOs;
 using Application.Interfaces;
-using System;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-namespace Presentation.Controllers // Certifique-se que Presentation está correto e faz parte do assembly web
+namespace Presentation.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioService _usuarioService;
+
         public UsuarioController(IUsuarioService usuarioService)
         {
             _usuarioService = usuarioService;
@@ -19,8 +20,15 @@ namespace Presentation.Controllers // Certifique-se que Presentation está corre
         [HttpPost]
         public async Task<IActionResult> InserirUsuario([FromBody] UsuarioDto usuarioDto)
         {
-            var usuarioCriado = await _usuarioService.AdicionarUsuarioAsync(usuarioDto);
-            return Ok(usuarioCriado);
+            try
+            {
+                var usuarioCriado = await _usuarioService.AdicionarUsuarioAsync(usuarioDto);
+                return CreatedAtAction(nameof(ObterUsuarioPorCpf), new { cpf = usuarioCriado.Cpf }, usuarioCriado);
+            }
+            catch (DomainException ex)
+            {
+                return BadRequest(new { erro = ex.Message });
+            }
         }
 
         [HttpGet]
@@ -30,22 +38,36 @@ namespace Presentation.Controllers // Certifique-se que Presentation está corre
             return Ok(usuarios);
         }
 
-        [HttpPost("usuarioCpf")]
-        public async Task<IActionResult> ObterUsuarioPeloId([FromBody] UsuarioCpfDto usuarioCpfDto)
+        [HttpGet("{cpf}")]
+        public async Task<IActionResult> ObterUsuarioPorCpf([FromRoute] string cpf)
         {
-            var usuario = await _usuarioService.ObterUsuarioPorIdAsync(usuarioCpfDto.Cpf);
-            if (usuario == null)
+            try
+            {
+                var usuario = await _usuarioService.ObterUsuarioPorCpfAsync(cpf);
+                return Ok(usuario);
+            }
+            catch (UsuarioNaoEncontradoException)
+            {
                 return NotFound();
-            return Ok(usuario);
+            }
         }
 
         [HttpPut("{cpf}")]
         public async Task<IActionResult> AtualizarUsuario([FromRoute] string cpf, [FromBody] UsuarioDto usuarioDto)
         {
-            var atualizado = await _usuarioService.AtualizarUsuarioPorCpfAsync(cpf, usuarioDto);
-            if (!atualizado)
+            try
+            {
+                await _usuarioService.AtualizarUsuarioPorCpfAsync(cpf, usuarioDto);
+                return NoContent();
+            }
+            catch (UsuarioNaoEncontradoException)
+            {
                 return NotFound();
-            return Ok(atualizado);
+            }
+            catch (DomainException ex)
+            {
+                return BadRequest(new { erro = ex.Message });
+            }
         }
-    }   
+    }
 }

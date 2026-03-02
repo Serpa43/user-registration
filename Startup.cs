@@ -4,11 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using Application.Interfaces;
-using Application.UseCases;
-using Domain.Repositories;
-using Infrastructure.Repositories; // ajuste conforme o local da implementação
-using Infrastructure; // Adicione este using
+using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace MyProject
@@ -25,19 +21,16 @@ namespace MyProject
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MyProject API", Version = "v1" });
             });
 
-            // Configuração do DbContext para SQLite
-            services.AddDbContext<Infrastructure.MyProjectDbContext>(options =>
+            services.AddDbContext<MyProjectDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
-            // Centralize o registro das dependências
             services.AddProjectServices();
-
-            // ...adicione outros serviços necessários...
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

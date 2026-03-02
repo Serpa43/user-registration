@@ -1,75 +1,72 @@
-# MyProject
+# MyProject - Cadastro de Usuários
 
-Estrutura baseada em Clean Architecture + DDD para .NET.
+API de cadastro de usuários estruturada com **Clean Architecture**, **DDD** e princípios de **Arquitetura Hexagonal**.
 
-- **Domain**: Entidades, ValueObjects, Aggregates, Repositories (interfaces)
-- **Application**: Casos de uso, DTOs, Interfaces de serviços
-- **Infrastructure**: Implementações de repositórios, serviços externos, Migrations
-- **Presentation**: APIs, Controllers, ViewModels
+## Arquitetura
 
-Siga as melhores práticas de Clean Architecture e DDD.
+```
+├── Domain/              Núcleo do domínio (entidades, value objects, exceções, interfaces de repositório)
+│   ├── Entities/
+│   ├── ValueObjects/
+│   ├── Exceptions/
+│   └── Repositories/
+├── Application/         Casos de uso e DTOs
+│   ├── UseCases/
+│   ├── Interfaces/
+│   └── DTOs/
+├── Infrastructure/      Adaptadores externos (persistência, DI)
+│   └── Repositories/
+├── Controllers/         Camada de apresentação (API REST)
+```
 
----
+### Fluxo de Dependências
+
+```
+Controllers → Application → Domain ← Infrastructure
+```
+
+A camada de **Infrastructure** implementa as interfaces (ports) definidas no **Domain**, seguindo o padrão Ports & Adapters.
 
 ## Endpoints da API
 
-Todos os endpoints seguem o padrão RESTful e estão organizados na camada Presentation, que depende apenas das camadas Application e Domain, respeitando os princípios da Clean Architecture e DDD.
-
 ### Usuário
 
-- **POST /api/usuario**
-  - Cadastra um novo usuário.
-  - Corpo (JSON):
-    ```json
-    {
-      "nome": "string",
-      "cpf": "string",
-      "rg": "string",
-      "dataNascimento": "2025-06-25T00:00:00",
-      "numeroTelefone": "string"
-    }
-    ```
-  - Retorno: Usuário criado.
+- **POST /api/usuario** — Cadastra um novo usuário.
 
-- **GET /api/usuario**
-  - Lista todos os usuários cadastrados.
-  - Retorno: Lista de usuários.
+  ```json
+  {
+    "nome": "string",
+    "cpf": "string",
+    "rg": "string",
+    "dataNascimento": "2025-06-25T00:00:00",
+    "numeroTelefone": "string"
+  }
+  ```
 
-- **POST /api/usuario/usuarioCpf**
-  - Busca usuário pelo CPF.
-  - Corpo (JSON):
-    ```json
-    {
-      "cpf": "string"
-    }
-    ```
-  - Retorno: Usuário correspondente ou 404 se não encontrado.
+  Retorno: `201 Created` com o usuário criado.
 
-- **PUT /api/usuario/{cpf}**
-  - Atualiza os dados de um usuário identificado pelo CPF.
-  - Parâmetro de rota: `cpf` (string)
-  - Corpo (JSON):
-    ```json
-    {
-      "nome": "string",
-      "dataNascimento": "2025-06-25T00:00:00",
-      "numeroTelefone": "string"
-    }
-    ```
-  - Observação: Não é permitido alterar o CPF ou RG.
-  - Retorno: 204 No Content em caso de sucesso, 404 se não encontrado.
+- **GET /api/usuario** — Lista todos os usuários.
 
----
+  Retorno: `200 OK` com lista de usuários.
 
-## Sobre Clean Architecture e DDD
+- **GET /api/usuario/{cpf}** — Busca usuário pelo CPF.
 
-Este projeto foi estruturado seguindo os princípios da Clean Architecture e Domain-Driven Design (DDD):
+  Retorno: `200 OK` com o usuário ou `404 Not Found`.
 
-- **Separação de responsabilidades:**
-  - Cada camada tem uma responsabilidade clara e depende apenas das camadas mais internas.
-- **Domain:** Contém as regras de negócio, entidades e interfaces de repositórios.
-- **Application:** Implementa os casos de uso e orquestra as operações de negócio.
-- **Infrastructure:** Implementa detalhes de persistência e integrações externas.
-- **Presentation:** Expõe a API e lida com a entrada/saída de dados.
+- **PUT /api/usuario/{cpf}** — Atualiza dados de um usuário (CPF e RG não podem ser alterados).
 
-Essa abordagem facilita testes, manutenção, evolução e desacoplamento do domínio de regras de negócio das tecnologias externas.
+  ```json
+  {
+    "nome": "string",
+    "dataNascimento": "2025-06-25T00:00:00",
+    "numeroTelefone": "string"
+  }
+  ```
+
+  Retorno: `204 No Content` em sucesso ou `404 Not Found`.
+
+## Tecnologias
+
+- .NET Core 3.1
+- Entity Framework Core 5.0 (SQLite)
+- Swagger (Swashbuckle)
